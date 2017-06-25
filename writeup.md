@@ -1,7 +1,8 @@
 ## Project: Kinematics Pick & Place
 
 ---
-
+This is the write up for the Kinematics project. Alternatively, you may also look at the python notebook that has the working for the following matrices
+https://github.com/frozenamazon/RoboND-Kinematics-Project/blob/master/code/Kinematics_Project_Test_Notebook.ipynb
 
 #### DH Parameters for Kuka arm
 

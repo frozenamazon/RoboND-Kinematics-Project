@@ -1,67 +1,89 @@
 ## Project: Kinematics Pick & Place
-### Writeup Template: You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
 
 ---
 
 
-**Steps to complete the project:**  
+#### DH Parameters for Kuka arm
 
+| i        | a(i-1)  | a(i-1)  | d(i-1)  | θ(i-1)  |
+| :------- |:-------:|:-------:|:-------:|:-------:|
+| 1        | 0       | 0       | d1      |θ1       |
+| 2        | -90     | a1      | 0       |θ2 - 90  |
+| 3        | 0       | a2      | 0       |θ3       |
+| 4        | -90     | a3      | d4      |θ4       |
+| 5        | 90      | 0       | 0       |θ5       |
+| 6        | -90     | 0       | 0       |θ6       |
+| G        | 0       | 0       | dG      |0        |
 
-1. Set up your ROS Workspace.
-2. Download or clone the [project repository](https://github.com/udacity/RoboND-Kinematics-Project) into the ***src*** directory of your ROS Workspace.  
-3. Experiment with the forward_kinematics environment and get familiar with the robot.
-4. Launch in [demo mode](https://classroom.udacity.com/nanodegrees/nd209/parts/7b2fd2d7-e181-401e-977a-6158c77bf816/modules/8855de3f-2897-46c3-a805-628b5ecf045b/lessons/91d017b1-4493-4522-ad52-04a74a01094c/concepts/ae64bb91-e8c4-44c9-adbe-798e8f688193).
-5. Perform Kinematic Analysis for the robot following the [project rubric](https://review.udacity.com/#!/rubrics/972/view).
-6. Fill in the `IK_server.py` with your Inverse Kinematics code. 
+#### Transformation matrix for Kuka arm
 
+T1_0 =  Matrix([
+[            cos(q1),            -sin(q1),            0,               0],
+[sin(q1)*cos(alpha0), cos(alpha0)*cos(q1), -sin(alpha0), -d1*sin(alpha0)],
+[sin(alpha0)*sin(q1), sin(alpha0)*cos(q1),  cos(alpha0),  d1*cos(alpha0)],
+[                  0,                   0,            0,               1]]) 
 
-[//]: # (Image References)
+T2_1 =  Matrix([
+[             sin(q2),             cos(q2),            0, a1],
+[-cos(alpha1)*cos(q2), sin(q2)*cos(alpha1), -sin(alpha1),  0],
+[-sin(alpha1)*cos(q2), sin(alpha1)*sin(q2),  cos(alpha1),  0],
+[                   0,                   0,            0,  1]]) 
 
-[image1]: ./misc_images/misc1.png
-[image2]: ./misc_images/misc2.png
-[image3]: ./misc_images/misc3.png
+T3_2 =  Matrix([
+[            cos(q3),            -sin(q3),            0, a2],
+[sin(q3)*cos(alpha2), cos(alpha2)*cos(q3), -sin(alpha2),  0],
+[sin(alpha2)*sin(q3), sin(alpha2)*cos(q3),  cos(alpha2),  0],
+[                  0,                   0,            0,  1]]) 
 
-## [Rubric](https://review.udacity.com/#!/rubrics/972/view) Points
-### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
+T4_3 =  Matrix([
+[            cos(q4),            -sin(q4),            0,              a3],
+[sin(q4)*cos(alpha3), cos(alpha3)*cos(q4), -sin(alpha3), -d4*sin(alpha3)],
+[sin(alpha3)*sin(q4), sin(alpha3)*cos(q4),  cos(alpha3),  d4*cos(alpha3)],
+[                  0,                   0,            0,               1]]) 
 
----
-### Writeup / README
+T5_4 =  Matrix([
+[            cos(q5),            -sin(q5),            0, 0],
+[sin(q5)*cos(alpha4), cos(alpha4)*cos(q5), -sin(alpha4), 0],
+[sin(alpha4)*sin(q5), sin(alpha4)*cos(q5),  cos(alpha4), 0],
+[                  0,                   0,            0, 1]]) 
 
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  
+T6_5 =  Matrix([
+[            cos(q6),            -sin(q6),            0, 0],
+[sin(q6)*cos(alpha5), cos(alpha5)*cos(q6), -sin(alpha5), 0],
+[sin(alpha5)*sin(q6), sin(alpha5)*cos(q6),  cos(alpha5), 0],
+[                  0,                   0,            0, 1]]) 
 
-You're reading it!
+TG_6 =  Matrix([
+[0,  0, 1,  0],
+[0, -1, 0,  0],
+[1,  0, 0, d7],
+[0,  0, 0,  1]]) 
 
-### Kinematic Analysis
-#### 1. Run the forward_kinematics demo and evaluate the kr210.urdf.xacro file to perform kinematic analysis of Kuka KR210 robot and derive its DH parameters.
+#### Homogeneous transform matrix from base_link to gripper_link
+In this case, alpha has been replaced with the following
+s = {
+     alpha0: 0, 
+     alpha1: -pi/2,  
+     alpha2: 0, 
+     alpha3: -pi/2, 
+     alpha4: pi/2, 
+     alpha5: -pi/2}
 
-Here is an example of how to include an image in your writeup.
+TG_0 =  Matrix([
 
-![alt text][image1]
+[-(sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*sin(q5) + cos(q1)*cos(q5)*cos(q2 + q3), 
+((sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*cos(q5) + sin(q5)*cos(q1)*cos(q2 + q3))*sin(q6) + (-sin(q1)*cos(q4) + sin(q4)*sin(q2 + q3)*cos(q1))*cos(q6), 
+((sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*cos(q5) + sin(q5)*cos(q1)*cos(q2 + q3))*cos(q6) - (-sin(q1)*cos(q4) + sin(q4)*sin(q2 + q3)*cos(q1))*sin(q6), 
+a1*cos(q1) + a2*sin(q2)*cos(q1) + a3*sin(q2 + q3)*cos(q1) + d4*cos(q1)*cos(q2 + q3) - d7*((sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*sin(q5) - cos(q1)*cos(q5)*cos(q2 + q3))],
 
-#### 2. Using the DH parameter table you derived earlier, create individual transformation matrices about each joint. In addition, also generate a generalized homogeneous transform between base_link and gripper_link using only end-effector(gripper) pose.
+[-(sin(q1)*sin(q2 + q3)*cos(q4) - sin(q4)*cos(q1))*sin(q5) + sin(q1)*cos(q5)*cos(q2 + q3),  
+((sin(q1)*sin(q2 + q3)*cos(q4) - sin(q4)*cos(q1))*cos(q5) + sin(q1)*sin(q5)*cos(q2 + q3))*sin(q6) + (sin(q1)*sin(q4)*sin(q2 + q3) + cos(q1)*cos(q4))*cos(q6),  
+((sin(q1)*sin(q2 + q3)*cos(q4) - sin(q4)*cos(q1))*cos(q5) + sin(q1)*sin(q5)*cos(q2 + q3))*cos(q6) - (sin(q1)*sin(q4)*sin(q2 + q3) + cos(q1)*cos(q4))*sin(q6), 
+a1*sin(q1) + a2*sin(q1)*sin(q2) + a3*sin(q1)*sin(q2 + q3) + d4*sin(q1)*cos(q2 + q3) - d7*((sin(q1)*sin(q2 + q3)*cos(q4) - sin(q4)*cos(q1))*sin(q5) - sin(q1)*cos(q5)*cos(q2 + q3))],
 
-Here's | A | Snappy | Table
---- | --- | --- | ---
-1 | `highlight` | **bold** | 7.41
-2 | a | b | c
-3 | *italic* | text | 403
-4 | 2 | 3 | abcd
+[-sin(q5)*cos(q4)*cos(q2 + q3) - sin(q2 + q3)*cos(q5), 
+-(sin(q5)*sin(q2 + q3) - cos(q4)*cos(q5)*cos(q2 + q3))*sin(q6) + sin(q4)*cos(q6)*cos(q2 + q3),    
+-(sin(q5)*sin(q2 + q3) - cos(q4)*cos(q5)*cos(q2 + q3))*cos(q6) - sin(q4)*sin(q6)*cos(q2 + q3), 
+a2*cos(q2) + a3*cos(q2 + q3) + d1 - d4*sin(q2 + q3) - d7*(sin(q5)*cos(q4)*cos(q2 + q3) + sin(q2 + q3)*cos(q5))],
 
-#### 3. Decouple Inverse Kinematics problem into Inverse Position Kinematics and inverse Orientation Kinematics; doing so derive the equations to calculate all individual joint angles.
-
-And here's another image! 
-
-![alt text][image2]
-
-### Project Implementation
-
-#### 1. Fill in the `IK_server.py` file with properly commented python code for calculating Inverse Kinematics based on previously performed Kinematic Analysis. Your code must guide the robot to successfully complete 8/10 pick and place cycles. Briefly discuss the code you implemented and your results. 
-
-
-Here I'll talk about the code, what techniques I used, what worked and why, where the implementation might fail and how I might improve it if I were going to pursue this project further.  
-
-
-And just for fun, another example image:
-![alt text][image3]
-
-
+[ 0, 0,  0, 1]]) 

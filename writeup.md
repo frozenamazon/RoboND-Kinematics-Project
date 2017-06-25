@@ -17,7 +17,7 @@ https://github.com/frozenamazon/RoboND-Kinematics-Project/blob/master/code/Kinem
 | G        | 0       | 0       | dG      |0        |
 
 #### Transformation matrix for Kuka arm
-
+```
 T1_0 =  Matrix([
 [            cos(q1),            -sin(q1),            0,               0],
 [sin(q1)*cos(alpha0), cos(alpha0)*cos(q1), -sin(alpha0), -d1*sin(alpha0)],
@@ -59,7 +59,7 @@ TG_6 =  Matrix([
 [0, -1, 0,  0],
 [1,  0, 0, d7],
 [0,  0, 0,  1]]) 
-
+```
 #### Homogeneous transform matrix from base_link to gripper_link
 In this case, alpha has been replaced with the following
 s = {

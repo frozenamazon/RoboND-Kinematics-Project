@@ -17,7 +17,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from geometry_msgs.msg import Pose
 from mpmath import *
 from sympy import *
-
+import numpy as np
 
 def handle_calculate_IK(req):
     rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
@@ -32,6 +32,10 @@ def handle_calculate_IK(req):
             joint_trajectory_point = JointTrajectoryPoint()
 
             # Define DH param symbols
+            a0, a1, a2, a3, a4, a5 = symbols('a0:6')
+            d1, d2, d3, d4, d5, d6, dG = symbols('d1:8')
+            alpha0, alpha1, alpha2, alpha3, alpha4, alpha5 = symbols('alpha0:6')
+            q1, q2, q3, q4, q5, q6 = symbols('q1:7') 
 
 
             
@@ -52,25 +56,55 @@ def handle_calculate_IK(req):
 
             
             # Extract end-effector position and orientation from request
-	    # px,py,pz = end-effector position
-	    # roll, pitch, yaw = end-effector orientation
+        # px,py,pz = end-effector position
+        # roll, pitch, yaw = end-effector orientation
             px = req.poses[x].position.x
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
+
+            P = np.array([[px], [py], [pz]])
+            print "px:", px
+            print "py:", py
+            print "pz:", pz
 
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
      
             # Calculate joint angles using Geometric IK method
+            print "roll:", roll
+            print "pitch:", pitch
+            print "yaw:", yaw
 
-		
+            # Calculate roll angles using Geometric IK method
+            T = tf.transformations.quaternion_matrix(
+                [req.poses[x].orientation.x, 
+                req.poses[x].orientation.y,
+                req.poses[x].orientation.z, 
+                req.poses[x].orientation.w]
+                )
+        
+            R = T[:3,:3]
+
+            print "R:", R
+
+            dG = 0.303 #dG = d6+l
+            # wrist center
+            Wc = P - dG * R[:3, [0]]
+            print "wc:", Wc
+        
 
 
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
-	    joint_trajectory_list.append(joint_trajectory_point)
+        theta1 = 0
+        theta2 = 0
+        theta3 = 0
+        theta4 = 0
+        theta5 = 0
+        theta6 = 0
+        joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+        joint_trajectory_list.append(joint_trajectory_point)
 
         rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
         return CalculateIKResponse(joint_trajectory_list)

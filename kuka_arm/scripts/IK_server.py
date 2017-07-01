@@ -73,19 +73,16 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
 
 def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
 
-    # Define DH param symbols
-    a0, a1, a2, a3, a4, a5 = symbols('a0:6')
-    d1, d2, d3, d4, d5, d6, dG = symbols('d1:8')
-    alpha0, alpha1, alpha2, alpha3, alpha4, alpha5 = symbols('alpha0:6')
-    q1, q2, q3, q4, q5, q6 = symbols('q1:7') 
 
-    s = {alpha0:     0,  a0:      0, d1: 0.75, q1: theta1,
-         alpha1: -pi/2,  a1:   0.35, d2:    0, q2: theta2,
-         alpha2:     0,  a2:   1.25, d3:    0, q3: theta3, 
-         alpha3: -pi/2,  a3: -0.054, d4:  1.5, q4: 0,
-         alpha4:  pi/2,  a4:      0, d5:    0, q5: 0,
-         alpha5: -pi/2,  a5:      0, d6:    0, q6: 0,
-         dG: 0.303 }
+    a0 = 0
+    d1 = 0.75
+    q1 = theta1
+    a1 = 0.35
+    d2 = 0
+    q2 = theta2
+    a2 = 1.25
+    d3 = 0
+    q3 = theta3
 
     T0_3 = Matrix([
         [sin(q2 + q3)*cos(q1), cos(q1)*cos(q2 + q3), -sin(q1), (a1 + a2*sin(q2))*cos(q1)],
@@ -100,7 +97,7 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
                    [sin(alpha)*cos(beta), sin(alpha)*sin(beta)*sin(gamma) + cos(alpha)*cos(gamma), sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)],
                    [          -sin(beta),                                    cos(beta)*sin(gamma), cos(beta)*cos(gamma)]])
 
-    R0_3 = T0_3[:3,:3].evalf(subs=s, chop = True)
+    R0_3 = T0_3[:3,:3]
 
     E3_6 = R0_3.inv() * Rrpy
     #R3_6 = (T3_4*T4_5*T5_6)[:3,:3] = E3_6
@@ -110,11 +107,14 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
     #     [-sin(q4)*cos(q5)*cos(q6) - sin(q6)*cos(q4),  sin(q4)*sin(q6)*cos(q5) - cos(q4)*cos(q6),  sin(q4)*sin(q5)]])
 
 
-    theta4 = atan2(E3_6[2,2], -E3_6[0,2])
-
-    #offset theta by pi/2 because the gripper to link 6 is not on the same axis
-    theta6 = atan2(-E3_6[1,1], E3_6[1,0]) - np.pi/2
     theta5 = atan2(sqrt(E3_6[1,0]**2 + E3_6[1,1]**2), E3_6[1,2])
+
+    if(sin(theta5) < 0):
+        theta4 = atan2(E3_6[2,2], -E3_6[0,2])
+        theta6 = atan2(-E3_6[1,1], E3_6[1,0])
+    else:
+        theta4 = atan2(E3_6[2,2], E3_6[0,2])
+        theta6 = atan2(E3_6[1,1], E3_6[1,0])
 
     return [theta4, theta5, theta6]
 

@@ -68,9 +68,6 @@ def getRRRJointAngles(wx,wy,wz):
     
     return [q1,q2,q3,q2b,q3b]
 
-def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
-    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
-
 def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
 
 
@@ -98,6 +95,7 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
                    [          -sin(beta),                                    cos(beta)*sin(gamma), cos(beta)*cos(gamma)]])
 
     R0_3 = T0_3[:3,:3]
+    print("R0_3",simplify(R0_3))
 
     E3_6 = R0_3.inv() * Rrpy
     #R3_6 = (T3_4*T4_5*T5_6)[:3,:3] = E3_6
@@ -108,13 +106,14 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
 
 
     theta5 = atan2(sqrt(E3_6[1,0]**2 + E3_6[1,1]**2), E3_6[1,2])
+    theta5b = atan2(-sqrt(E3_6[1,0]**2 + E3_6[1,1]**2), E3_6[1,2])
 
     if(sin(theta5) < 0):
         theta4 = atan2(E3_6[2,2], -E3_6[0,2])
-        theta6 = atan2(-E3_6[1,1], E3_6[1,0])
+        theta6 = atan2(-E3_6[1,1], E3_6[1,0]) 
     else:
         theta4 = atan2(E3_6[2,2], E3_6[0,2])
-        theta6 = atan2(E3_6[1,1], E3_6[1,0])
+        theta6 = atan2(E3_6[1,1], E3_6[1,0]) 
 
     return [theta4, theta5, theta6]
 
@@ -131,53 +130,53 @@ def handle_calculate_IK(req):
             joint_trajectory_point = JointTrajectoryPoint()
 
             # Define DH param symbols
-            a0, a1, a2, a3, a4, a5 = symbols('a0:6')
-            d1, d2, d3, d4, d5, d6, dG = symbols('d1:8')
-            alpha0, alpha1, alpha2, alpha3, alpha4, alpha5 = symbols('alpha0:6')
-            q1, q2, q3, q4, q5, q6 = symbols('q1:7') 
+            # a0, a1, a2, a3, a4, a5 = symbols('a0:6')
+            # d1, d2, d3, d4, d5, d6, dG = symbols('d1:8')
+            # alpha0, alpha1, alpha2, alpha3, alpha4, alpha5 = symbols('alpha0:6')
+            # q1, q2, q3, q4, q5, q6 = symbols('q1:7') 
 
-            # Create individual transformation matrices
-            T0_1 =  Matrix([
-            [cos(q1), -sin(q1), 0,  0],
-            [sin(q1),  cos(q1), 0,  0],
-            [      0,        0, 1, d1],
-            [      0,        0, 0,  1]])
+            # # Create individual transformation matrices
+            # T0_1 =  Matrix([
+            # [cos(q1), -sin(q1), 0,  0],
+            # [sin(q1),  cos(q1), 0,  0],
+            # [      0,        0, 1, d1],
+            # [      0,        0, 0,  1]])
 
-            T1_2 =  Matrix([
-            [sin(q2),  cos(q2), 0, a1],
-            [      0,        0, 1,  0],
-            [cos(q2), -sin(q2), 0,  0],
-            [      0,        0, 0,  1]])
+            # T1_2 =  Matrix([
+            # [sin(q2),  cos(q2), 0, a1],
+            # [      0,        0, 1,  0],
+            # [cos(q2), -sin(q2), 0,  0],
+            # [      0,        0, 0,  1]])
 
-            T2_3 =  Matrix([
-            [cos(q3), -sin(q3), 0, a2],
-            [sin(q3),  cos(q3), 0,  0],
-            [      0,        0, 1,  0],
-            [      0,        0, 0,  1]])
+            # T2_3 =  Matrix([
+            # [cos(q3), -sin(q3), 0, a2],
+            # [sin(q3),  cos(q3), 0,  0],
+            # [      0,        0, 1,  0],
+            # [      0,        0, 0,  1]])
 
-            T3_4 =  Matrix([
-            [ cos(q4), -sin(q4), 0, a3],
-            [       0,        0, 1, d4],
-            [-sin(q4), -cos(q4), 0,  0],
-            [       0,        0, 0,  1]])
+            # T3_4 =  Matrix([
+            # [ cos(q4), -sin(q4), 0, a3],
+            # [       0,        0, 1, d4],
+            # [-sin(q4), -cos(q4), 0,  0],
+            # [       0,        0, 0,  1]])
 
-            T4_5 =  Matrix([
-            [cos(q5), -sin(q5),  0, 0],
-            [      0,        0, -1, 0],
-            [sin(q5),  cos(q5),  0, 0],
-            [      0,        0,  0, 1]])
+            # T4_5 =  Matrix([
+            # [cos(q5), -sin(q5),  0, 0],
+            # [      0,        0, -1, 0],
+            # [sin(q5),  cos(q5),  0, 0],
+            # [      0,        0,  0, 1]])
 
-            T5_6 =  Matrix([
-            [ cos(q6), -sin(q6), 0, 0],
-            [       0,        0, 1, 0],
-            [-sin(q6), -cos(q6), 0, 0],
-            [       0,        0, 0, 1]])
+            # T5_6 =  Matrix([
+            # [ cos(q6), -sin(q6), 0, 0],
+            # [       0,        0, 1, 0],
+            # [-sin(q6), -cos(q6), 0, 0],
+            # [       0,        0, 0, 1]])
 
-            T6_G =  Matrix([
-            [0,  0, 1,  0],
-            [0, -1, 0,  0],
-            [1,  0, 0, dG],
-            [0,  0, 0,  1]])
+            # T6_G =  Matrix([
+            # [0,  0, 1,  0],
+            # [0, -1, 0,  0],
+            # [1,  0, 0, dG],
+            # [0,  0, 0,  1]])
 
             # T0_2 = T0_1*T1_2 #base_link to link_2
             # T0_3 = T0_2*T2_3 #link_2 to link_3
@@ -226,23 +225,26 @@ def handle_calculate_IK(req):
                 theta2 = theta2
                 theta3 = theta3
             else:  
-                s_1 = {alpha0:     0,  a0:      0, d1: 0.75, q1: theta1,
-                     alpha1: -pi/2,  a1:   0.35, d2:    0, q2: theta2,
-                     alpha2:     0,  a2:   1.25, d3:    0, q3: theta3, 
-                     alpha3: -pi/2,  a3: mod_a3, d4:  mod_d4, q4:0,
-                     alpha4:  pi/2,  a4:      0, d5:    0, q5: 0,
-                     alpha5: -pi/2,  a5:      0, d6:    0, q6:0,
-                     dG: 0.303 }
-
-                opt1 = T0_5.evalf(subs=s_1, chop = True)
-
-                s_2 = {alpha0:     0,  a0:      0, d1: 0.75, q1: theta1,
-                     alpha1: -pi/2,  a1:   0.35, d2:    0, q2: theta2b,
-                     alpha2:     0,  a2:   1.25, d3:    0, q3: theta3b, 
-                     alpha3: -pi/2,  a3: mod_a3, d4:  mod_d4, q4:0,
-                     alpha4:  pi/2,  a4:      0, d5:    0, q5: 0,
-                     alpha5: -pi/2,  a5:      0, d6:    0, q6:0,
-                     dG: 0.303 }
+                print("2 thetas")
+                a0 = 0
+                a1 = 0.35
+                a2 = 1.25
+                a3 = -0.054
+                a4 = 0
+                a5 = 0
+                d1 = 0.75
+                d2 = 0
+                d3 = 0
+                d4 = 1.5
+                d5 = 0
+                d6 = 0
+                q1 = theta1
+                q2 = theta2
+                q3 = theta3
+                q4 = 0
+                q5 = 0
+                q6 = 0
+                dG = 0.303
 
                 T0_5 = Matrix([
                 [(sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*cos(q5) + sin(q5)*cos(q1)*cos(q2 + q3), -(sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*sin(q5) + cos(q1)*cos(q5)*cos(q2 + q3), -sin(q1)*cos(q4) + sin(q4)*sin(q2 + q3)*cos(q1), (a1 + a2*sin(q2) + a3*sin(q2 + q3) + d4*cos(q2 + q3))*cos(q1)],
@@ -250,7 +252,19 @@ def handle_calculate_IK(req):
                 [                                   -sin(q5)*sin(q2 + q3) + cos(q4)*cos(q5)*cos(q2 + q3),                                     -sin(q5)*cos(q4)*cos(q2 + q3) - sin(q2 + q3)*cos(q5),                            sin(q4)*cos(q2 + q3),           a2*cos(q2) + a3*cos(q2 + q3) + d1 - d4*sin(q2 + q3)],
                 [                                                                                      0,                                                                                        0,                                               0,                                                             1]])
 
-                opt2 = T0_5.evalf(subs=s_1, chop = True)
+                opt1 = T0_5
+
+                q1 = theta1
+                q2 = theta2b
+                q3 = theta3b
+
+                T0_5 = Matrix([
+                [(sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*cos(q5) + sin(q5)*cos(q1)*cos(q2 + q3), -(sin(q1)*sin(q4) + sin(q2 + q3)*cos(q1)*cos(q4))*sin(q5) + cos(q1)*cos(q5)*cos(q2 + q3), -sin(q1)*cos(q4) + sin(q4)*sin(q2 + q3)*cos(q1), (a1 + a2*sin(q2) + a3*sin(q2 + q3) + d4*cos(q2 + q3))*cos(q1)],
+                [(sin(q1)*sin(q2 + q3)*cos(q4) - sin(q4)*cos(q1))*cos(q5) + sin(q1)*sin(q5)*cos(q2 + q3), -(sin(q1)*sin(q2 + q3)*cos(q4) - sin(q4)*cos(q1))*sin(q5) + sin(q1)*cos(q5)*cos(q2 + q3),  sin(q1)*sin(q4)*sin(q2 + q3) + cos(q1)*cos(q4), (a1 + a2*sin(q2) + a3*sin(q2 + q3) + d4*cos(q2 + q3))*sin(q1)],
+                [                                   -sin(q5)*sin(q2 + q3) + cos(q4)*cos(q5)*cos(q2 + q3),                                     -sin(q5)*cos(q4)*cos(q2 + q3) - sin(q2 + q3)*cos(q5),                            sin(q4)*cos(q2 + q3),           a2*cos(q2) + a3*cos(q2 + q3) + d1 - d4*sin(q2 + q3)],
+                [                                                                                      0,                                                                                        0,                                               0,                                                             1]])
+
+                opt2 = T0_5
                 
                 difference1 = abs(wx - opt1[0,3]) + abs(wy - opt1[1,3]) + abs(wz - opt1[2,3])
 
@@ -261,10 +275,10 @@ def handle_calculate_IK(req):
                     theta3 = theta3b
 
             # Populate response for the IK request
-
             [theta4, theta5, theta6] = getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3)
 
 
+            print("theta:", theta1, theta2,theta3,theta4,theta5,theta6)
             joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
             joint_trajectory_list.append(joint_trajectory_point)
 

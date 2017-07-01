@@ -105,15 +105,10 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
     #     [-sin(q4)*cos(q5)*cos(q6) - sin(q6)*cos(q4),  sin(q4)*sin(q6)*cos(q5) - cos(q4)*cos(q6),  sin(q4)*sin(q5)]])
 
 
-    theta5 = atan2(sqrt(E3_6[1,0]**2 + E3_6[1,1]**2), E3_6[1,2])
-    theta5b = atan2(-sqrt(E3_6[1,0]**2 + E3_6[1,1]**2), E3_6[1,2])
-
-    if(sin(theta5) < 0):
-        theta4 = atan2(E3_6[2,2], -E3_6[0,2])
-        theta6 = atan2(-E3_6[1,1], E3_6[1,0]) 
-    else:
-        theta4 = atan2(E3_6[2,2], E3_6[0,2])
-        theta6 = atan2(E3_6[1,1], E3_6[1,0]) 
+    theta4 = atan2(E3_6[2,2], -E3_6[0,2]).evalf()
+    theta6 = atan2(-E3_6[1,1], E3_6[1,0]).evalf()
+    theta5 = atan2(sqrt(E3_6[1,0]**2 + E3_6[1,1]**2), E3_6[1,2]).evalf()
+    theta5b = atan2(-sqrt(E3_6[1,0]**2 + E3_6[1,1]**2), E3_6[1,2]).evalf()
 
     return [theta4, theta5, theta6]
 
@@ -277,9 +272,14 @@ def handle_calculate_IK(req):
             # Populate response for the IK request
             [theta4, theta5, theta6] = getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3)
 
+            if(theta4 > 0):
+                theta4 = (theta4 - np.pi).evalf()
+            else :
+                theta4 = (theta4 + np.pi).evalf()
 
+            # theta6 = theta6 - np.pi/2
             print("theta:", theta1, theta2,theta3,theta4,theta5,theta6)
-            joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+            joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, -theta5, theta6]
             joint_trajectory_list.append(joint_trajectory_point)
 
         rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))

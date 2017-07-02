@@ -4,7 +4,6 @@ import numpy as np
 
 class Transformation:
 
-
 	def rot_x(self, q):
 	    R_x = Matrix([[ 1,              0,        0],
 	              [ 0,        cos(q), -sin(q)],

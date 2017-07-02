@@ -20,7 +20,7 @@ from sympy import *
 import numpy as np
 import math
 
-
+numberOfRuns = 0
 # Define Modified DH Transformation matrix
 def transformation_matrix(alpha,a,d,q):    
     return Matrix([[        cos(q),        -sin(q),       0,           a],
@@ -87,6 +87,7 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
         [        cos(q2 + q3),        -sin(q2 + q3),        0,           a2*cos(q2) + d1],
         [                   0,                    0,        0,                         1]])
 
+    #implementing the Roll Pitch Yaw intrinsic transformation
     alpha = yaw
     beta = pitch
     gamma = roll
@@ -94,10 +95,16 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
                    [sin(alpha)*cos(beta), sin(alpha)*sin(beta)*sin(gamma) + cos(alpha)*cos(gamma), sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)],
                    [          -sin(beta),                                    cos(beta)*sin(gamma), cos(beta)*cos(gamma)]])
 
+    # Include a correction rotation which is rot_z(pi) * rot_y(-pi/2) to fix the end gripper link axis
+    # Correction matrix is transpose as the final Rrpy has been included with this difference in axis gripper to the normal DH
+    Rcorr = Matrix([
+        [0,  0, 1],
+        [0, -1, 0],
+        [1,  0, 0]])
     R0_3 = T0_3[:3,:3]
-    print("R0_3",simplify(R0_3))
 
-    E3_6 = R0_3.inv() * Rrpy
+
+    E3_6 = R0_3.transpose() * Rrpy * Rcorr.transpose()
     #R3_6 = (T3_4*T4_5*T5_6)[:3,:3] = E3_6
     # R3_6 = Matrix([
     #     [-sin(q4)*sin(q6) + cos(q4)*cos(q5)*cos(q6), -sin(q4)*cos(q6) - sin(q6)*cos(q4)*cos(q5), -sin(q5)*cos(q4)],
@@ -113,6 +120,7 @@ def getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3):
     return [theta4, theta5, theta6]
 
 def handle_calculate_IK(req):
+    global numberOfRuns
     rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
     if len(req.poses) < 1:
         print "No valid poses received"
@@ -216,10 +224,8 @@ def handle_calculate_IK(req):
             if theta2 == None:
                 theta2 = theta2b
                 theta3 = theta3b  
-            elif theta2b == None:
-                theta2 = theta2
-                theta3 = theta3
-            else:  
+
+            elif theta2b != None:
                 print("2 thetas")
                 a0 = 0
                 a1 = 0.35
@@ -272,17 +278,15 @@ def handle_calculate_IK(req):
             # Populate response for the IK request
             [theta4, theta5, theta6] = getRRRSpehericalArmJointAngles(yaw, pitch, roll, theta1, theta2, theta3)
 
-            if(theta4 > 0):
-                theta4 = (theta4 - np.pi).evalf()
-            else :
-                theta4 = (theta4 + np.pi).evalf()
-
             # theta6 = theta6 - np.pi/2
-            print("theta:", theta1, theta2,theta3,theta4,theta5,theta6)
-            joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, -theta5, theta6]
+            # print("theta:", theta1, theta2,theta3,theta4,theta5,theta6)
+            joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
             joint_trajectory_list.append(joint_trajectory_point)
 
-        rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
+
+        numberOfRuns += 1
+        print("You have run ", numberOfRuns/2, " times with the number of commands:", len(joint_trajectory_list), ". Time to bring it home")
+        rospy.loginfo("This is your new command: %s" % len(joint_trajectory_list))
         return CalculateIKResponse(joint_trajectory_list)
 
 

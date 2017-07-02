@@ -29,6 +29,8 @@ def transformation_matrix(alpha,a,d,q):
                    [             0,              0,        0,        1]])
 
 def getRRRJointAngles(wx,wy,wz):
+    # getting the first three revolute joint, ignoringthe spherical arm
+
     #link between joint 2 to 3
     l2 = 1.25
     #link between joint 3 to wc
@@ -44,12 +46,18 @@ def getRRRJointAngles(wx,wy,wz):
     zc = (wz - dz0_1)
     q1 = theta1 = atan2(wy,wx)
 
+    # theta 2 and theta3 forms a tringle with the wrist center
+    # Following the cosine rule. a2 = b2 + c2 - 2bc*cos(theta)
     r = (xc*xc + zc*zc - l3*l3 - l2*l2)/(2*l3*l2)
     theta3 = atan2(sqrt(1-r*r), r)
     theta3b = atan2(-sqrt(1-r*r), r) 
+
+    # Theta 2 is basically the angle of the triangle minus triangle angle
     theta2 = atan2(xc,zc) - atan2(l3*sin(theta3), l2+l3*cos(theta3))
     theta2b = atan2(xc,zc) - atan2(l3*sin(theta3b), l2+l3*cos(theta3b))
     
+    # just making sure that theta are evaluated and considered the both + and -
+    # theta3 needs to minus 90degree as the joint starts at that position
     q2 = theta2.evalf()
     q2b = theta2b.evalf()
     q3 = (theta3 - np.pi/2).evalf()
@@ -213,7 +221,7 @@ def handle_calculate_IK(req):
             R = T[:3,:3]
 
             dG = 0.303 #dG = d6+l
-            # wrist center
+            # calulating the wrist center
             Wc = P - dG * R[:3, [0]]
             wx = Wc[0,0]
             wy = Wc[1,0]

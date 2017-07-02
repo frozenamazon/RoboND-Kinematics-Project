@@ -39,24 +39,27 @@ class Transformation:
 		q1, q2, q3, q4, q5, q6 = symbols('q1:7') 
 
         # Define Modified DHfrom Transformation matrix
-		T1_0 = self.transformation_matrix(0, 0, d1, q1)
-		T2_1 = self.transformation_matrix(-pi/2, a1, 0, q2-pi/2)
-		T3_2 = self.transformation_matrix(0, a2, 0, q3)
-		T4_3 = self.transformation_matrix(-pi/2, a3, d4, q4)
-		T5_4 = self.transformation_matrix(pi/2, 0, 0, q5)
-		T6_5 = self.transformation_matrix(-pi/2, 0, 0, q6)
-		rG_6 = self.rot_z(pi) * self.rot_y(-pi/2)
-		tG_6 = Matrix([[0],[0],[dG]])
-		TG_6 = rG_6.row_join(tG_6)
-		TG_6 = TG_6.col_join(Matrix([[0,0,0,1]]))
+		T0_1 = self.transformation_matrix(0, 0, d1, q1)
+		T1_2 = self.transformation_matrix(-pi/2, a1, 0, q2 - pi/2) #remember to offset q2 = -pi/2
+		T2_3 = self.transformation_matrix(0, a2, 0, q3)
+		T3_4 = self.transformation_matrix(-pi/2, a3, d4, q4)
+		T4_5 = self.transformation_matrix(pi/2, 0, 0, q5)
+		T5_6 = self.transformation_matrix(-pi/2, 0, 0, q6)
 
-		T2_0 = T1_0*T2_1 #base_link to link_2
-		T3_0 = T2_0*T3_2 #link_2 to link_3
-		T4_0 = T3_0*T4_3 #link_3 to link_4
-		T5_0 = T4_0*T5_4 #link_4 to link_5
-		T6_0 = T5_0*T6_5 #link_5 to link_6
-		TG_0 = T6_0*TG_6 #link_6 to link_G
+		r6_G = self.rot_z(pi) * self.rot_y(-pi/2)
+		t6_G = Matrix([[0],[0],[dG]])
+		T6_G = r6_G.row_join(t6_G)
+		T6_G = T6_G.col_join(Matrix([[0,0,0,1]]))
 
+		T0_2 = T0_1*T1_2 #base_link to link_2
+		T0_3 = T0_2*T2_3 #link_2 to link_3
+		T0_4 = T0_3*T3_4 #link_3 to link_4
+		T0_5 = T0_4*T4_5 #link_4 to link_5
+		T0_6 = T5_0*T5_6 #link_5 to link_6
+		T0_G = T6_0*T6_G #link_6 to link_G
+
+		self.T0_3 = T0_3
+		self.Rcorr = r6_G
 	
 
 
